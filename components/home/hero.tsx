@@ -1,8 +1,35 @@
+"use client";
+import { useState } from "react";
 import { Search } from "lucide-react";
-import React from "react";
 import { stats } from "./_components/data";
+import { useRouter } from "next/navigation";
 
 const Hero = () => {
+  // filter state
+  const [brand, setBrand] = useState<string>("");
+  const [model, setModel] = useState<string>("");
+  const [year, setYear] = useState<string>("");
+  const router = useRouter();
+
+  // results state
+
+  const modelsForBrand: Record<string, string[]> = {
+    BMW: ["3 Serisi", "5 Serisi", "X5"],
+    Mercedes: ["C-Serisi", "E-Serisi", "GLC"],
+    Audi: ["A3", "A4", "Q5"],
+    Volkswagen: ["Passat", "Golf", "Tiguan"],
+    Toyota: ["Corolla", "Camry", "RAV4"],
+  };
+
+  const onSearch = () => {
+    const params = new URLSearchParams();
+    if (brand) params.set("brand", brand);
+    if (model) params.set("model", model);
+    if (year) params.set("year", year);
+
+    router.push(`/cars?${params.toString()}`);
+  };
+
   return (
     <section className="container mx-auto px-4 py-16">
       <div className="text-center max-w-4xl mx-auto mb-12">
@@ -20,23 +47,54 @@ const Hero = () => {
         {/* Search Bar */}
         <div className="bg-white rounded-2xl shadow-2xl p-6 border border-slate-200">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <select className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
-              <option>Marka Seçin</option>
-              <option>BMW</option>
-              <option>Mercedes</option>
-              <option>Audi</option>
-              <option>Volkswagen</option>
+            <select
+              value={brand}
+              onChange={(e) => {
+                setBrand(e.target.value);
+                setModel("");
+              }}
+              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            >
+              <option value="">Marka Seçin</option>
+              <option value="BMW">BMW</option>
+              <option value="Mercedes">Mercedes</option>
+              <option value="Audi">Audi</option>
+              <option value="Volkswagen">Volkswagen</option>
+              <option value="Toyota">Toyota</option>
             </select>
-            <select className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
-              <option>Model Seçin</option>
+
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              disabled={!brand}
+            >
+              <option value="">Model Seçin</option>
+              {brand &&
+                (modelsForBrand[brand] || []).map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
             </select>
-            <select className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
-              <option>Yıl</option>
-              <option>2023</option>
-              <option>2022</option>
-              <option>2021</option>
+
+            <select
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            >
+              <option value="">Yıl</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
             </select>
-            <button className="px-6 py-3 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-lg hover:scale-105 transition font-medium flex items-center justify-center gap-2">
+
+            <button
+              onClick={onSearch}
+              className="px-6 py-3 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-lg hover:scale-105 transition font-medium flex items-center justify-center gap-2 disabled:opacity-60"
+            >
               <Search className="w-5 h-5" />
               Ara
             </button>
@@ -45,7 +103,7 @@ const Hero = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
         {stats.map((stat, index) => (
           <div
             key={index}
