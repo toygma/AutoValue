@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Image from "next/image";
 import {
   Upload,
@@ -12,16 +12,20 @@ import {
   Mail,
   User,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Props {
   currentStep: number;
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 }
-
+const MAX_SIZE = 4 * 1024 * 1024;
+const MAX_IMAGES = 10;
 const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [formData, setFormData] = useState({
-    // Araç Bilgileri
     brand: "",
     model: "",
     year: "",
@@ -32,32 +36,54 @@ const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
     engineSize: "",
     horsePower: "",
 
-    // Fiyat ve Konum
     price: "",
     city: "",
     district: "",
 
-    // Açıklama
     title: "",
     description: "",
 
-    // İletişim
     name: "",
     phone: "",
     email: "",
   });
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
-      setImages([...images, ...newImages].slice(0, 10));
+    if (!files) return;
+    const newFiles = Array.from(files) as File[];
+
+    if (images.length + newFiles.length > MAX_IMAGES) {
+      return toast.error(`En fazla ${MAX_IMAGES} resim yükleyebilirsiniz.`);
+    }
+
+    const validNewFiles: File[] = [];
+    const newPreviewUrls: string[] = [];
+
+    newFiles.forEach((file) => {
+      if (file.size > MAX_SIZE) {
+        toast.error("4MB'dan büyük resimler yükleyemezsiniz.");
+        return;
+      }
+
+      validNewFiles.push(file);
+      newPreviewUrls.push(URL.createObjectURL(file));
+    });
+
+    setImages((prev) => [...prev, ...validNewFiles]);
+    setPreviewImages((oldPreviews) => [...oldPreviews, ...newPreviewUrls]);
+
+    if (e.target) {
+      e.target.value = "";
     }
   };
 
-  const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+  const handleRemoveImage = (index: number) => {
+    URL.revokeObjectURL(previewImages[index]);
+
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    setPreviewImages((prevPreviews) =>
+      prevPreviews.filter((_, i) => i !== index)
+    );
   };
 
   const handleInputChange = (
@@ -68,9 +94,46 @@ const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
-    alert("İlan başarıyla oluşturuldu!");
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("brand", "BMW");
+    formData.append("model", "320i");
+    formData.append("fuel", "Elektrik");
+    formData.append("transmission", "Manuel");
+    formData.append("color", "beyaz");
+    formData.append("engineSize", "1998");
+    formData.append("title", "BMW 320i sport paket");
+    formData.append("description", "Aracım temizdir...");
+    formData.append("city", "izmir");
+    formData.append("district", "besiktas");
+    formData.append("km", "4500");
+    formData.append("price", "1850000");
+    formData.append("horsePower", "184");
+    formData.append("year", "2007");
+
+    // images: File[]
+    for (const image of images) {
+      formData.append("images", image);
+    }
+
+    // fetch ile gönder
+    const res = await fetch("/api/cars", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("API hatası:", err);
+      setLoading(false);
+    } else {
+      console.log("İlan başarıyla gönderildi");
+      setLoading(false);
+    }
   };
+
   return (
     <>
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
@@ -153,9 +216,8 @@ const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 >
                   <option value="">Yakıt Tipi Seçin</option>
-                  <option value="benzin">Benzin</option>
+                  <option value="benzin">Gaz</option>
                   <option value="dizel">Dizel</option>
-                  <option value="lpg">LPG</option>
                   <option value="hybrid">Hybrid</option>
                   <option value="elektrik">Elektrik</option>
                 </select>
@@ -266,8 +328,9 @@ const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
               <input
                 type="file"
                 id="image-upload"
-                multiple
+                ref={fileInputRef}
                 accept="image/*"
+                multiple
                 onChange={handleImageUpload}
                 className="hidden"
               />
@@ -284,7 +347,7 @@ const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
 
             {images.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {images.map((image, index) => (
+                {previewImages.map((image, index) => (
                   <div key={index} className="relative group">
                     <Image
                       src={image}
@@ -294,7 +357,7 @@ const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
                       className="w-full h-32 object-cover rounded-lg border border-slate-200"
                     />
                     <button
-                      onClick={() => removeImage(index)}
+                      onClick={() => handleRemoveImage(index)}
                       className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
                     >
                       <X className="w-4 h-4" />
@@ -550,11 +613,15 @@ const CarInformation = ({ currentStep, setCurrentStep }: Props) => {
             </button>
           ) : (
             <button
-              onClick={handleSubmit}
-              className="px-8 py-3 bg-linear-to-r from-green-600 to-green-700 text-white rounded-lg hover:shadow-lg hover:scale-105 transition font-medium flex items-center gap-2"
+              disabled={loading}
+              className={`px-8 py-3  text-white rounded-lg   transition font-medium flex items-center gap-2 ${
+                loading
+                  ? "cursor-not-allowed bg-gray-200"
+                  : "bg-linear-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
+              }`}
             >
               <Check className="w-5 h-5" />
-              İlanı Yayınla
+              {loading ? "Yayınlanıyor..." : "İlanı Yayınla"}
             </button>
           )}
         </div>

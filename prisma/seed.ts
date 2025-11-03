@@ -34,7 +34,7 @@ async function main() {
       district: "Kadikoy",
       title: "Temiz Toyota Corolla",
       description: "Hiçbir problemi yok, full bakımlı.",
-      user: { connect: { id: "cmhjb4fgz0001vy2cmb7b2m0i" } },
+      user: { connect: { id: users[0].id} },
     },
     {
       brand: "BMW",
@@ -51,7 +51,7 @@ async function main() {
       district: "Cankaya",
       title: "BMW X5 M Sport",
       description: "Harika durumda, tüm bakımları yapıldı.",
-      user: { connect: { id: "cmhjb4fgz0001vy2cmb7b2m0i" } },
+      user: { connect: { id: users[1].id} },
     },
   ];
 

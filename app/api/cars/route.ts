@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-
+import { upload_file } from "@/lib/cloudinary";
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     const cars = await prisma.car.findMany({
       where: filters,
-      include: { user: true }, 
+      include: { user: true },
     });
 
     return NextResponse.json(cars, { status: 200 });
@@ -40,17 +40,53 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
+    const formData = await req.formData();
+    
+    if (!formData) {
+      return NextResponse.json({ error: "Missing form data" }, { status: 400 });
+    }
+    
+    const body: { [key: string | number]: any } = {};
+    const imageFiles: File[] = [];
+    console.log("🚀 ~ POST ~ formData:", body)
 
-    if (!body) {
-      return NextResponse.json(
-        { error: "Missing request body" },
-        { status: 400 }
-      );
+    for (const [key, value] of formData.entries()) {
+      if (key === "images") {
+        if (value instanceof File) {
+          imageFiles.push(value);
+        }
+      } else {
+        // Metin alanlarını string olarak kaydet
+        body[key] = value as string;
+      }
     }
 
+    const uploadPromises = imageFiles.map((image: any) =>
+      upload_file(image, "autoValue/cars")
+    );
+    const uploadedResults = await Promise.all(uploadPromises);
+
+    const imageUrls: string[] = uploadedResults.map((result) => result.url);
+
     const dataToCreate = {
-      ...body,
+      brand: body.brand,
+      model: body.model,
+      fuel: body.fuel,
+      transmission: body.transmission,
+      color: body.color,
+      engineSize: body.engineSize,
+      title: body.title,
+      description: body.description,
+      city: body.city,
+      district: body.district,
+
+      images: imageUrls,
+
+      km: parseInt(body.km as string, 10),
+      price: parseFloat(body.price as string),
+      horsePower: parseInt(body.horsePower as string, 10),
+      year: parseInt(body.year as string, 10),
+
       userId: session.user.id,
     };
 
@@ -62,6 +98,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(car, { status: 201 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("İlan oluşturma hatası:", error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

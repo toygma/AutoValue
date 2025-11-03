@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import ListingButton from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 const SignUp = () => {
   const {
     register,
