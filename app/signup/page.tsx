@@ -1,7 +1,39 @@
-import ListingButton from "@/components/ui/button";
+"use client"
 import Link from "next/link";
-
+import axiosInstance from "@/lib/axios";
+import { AuthInput, AuthSchema } from "@/schemas/auth.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import ListingButton from "@/components/ui/button";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 const SignUp = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<AuthInput>({
+    resolver: zodResolver(AuthSchema),
+    mode: "onChange",
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+  const router = useRouter()
+
+  const onSubmit = async (data: AuthInput) => {
+    try {
+      await axiosInstance.post("/api/auth/signup", data);
+      toast.success("Kayıt başarılı giriş sayfasına yönlendirileceksiniz.");
+      router.push("/login");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Bir hata oluştu");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-md w-full p-8 rounded-2xl shadow-lg bg-white border border-gray-200">
@@ -13,14 +45,18 @@ const SignUp = () => {
         </p>
 
         <div className="pt-8">
-          <form className="flex flex-col gap-6">
+          <form
+            className="flex flex-col gap-6"
+            onSubmit={handleSubmit(onSubmit)}
+          >
             {/* Email */}
             <div className="relative">
               <input
                 type={"email"}
                 placeholder=" "
                 className="peer border-2 border-gray-200 rounded-lg outline-none w-full py-2 px-2 transition-all duration-300 bg-white focus:bg-white  "
-                autoComplete="off"
+                autoComplete="email"
+                {...register("email")}
               />
               <label
                 htmlFor={"email"}
@@ -39,7 +75,8 @@ const SignUp = () => {
                 type={"password"}
                 placeholder=" "
                 className="peer border-2 border-gray-200 rounded-lg outline-none w-full py-2 px-2 transition-all duration-300 bg-white focus:bg-white  "
-                autoComplete="off"
+                autoComplete="password"
+                {...register("password")}
               />
               <label
                 htmlFor={"password"}
@@ -55,13 +92,16 @@ const SignUp = () => {
             {/* Signup Link */}
             <div className="text-center text-gray-500 text-sm">
               Hesabın var mı?{" "}
-              <Link href={"/login"} className="underline text-blue-500 hover:text-blue-600">
+              <Link
+                href={"/login"}
+                className="underline text-blue-500 hover:text-blue-600"
+              >
                 Giriş Yap
               </Link>
             </div>
 
             {/* Button */}
-            <ListingButton label="Kayıt Ol"/>
+            <ListingButton variant="success" label="Kayıt Ol" type="submit"/>
           </form>
         </div>
       </div>

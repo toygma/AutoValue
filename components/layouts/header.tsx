@@ -5,12 +5,12 @@ import Link from "next/link";
 import { menuData } from "./_components/menu-data";
 import MobileMenu from "./mobileMenu";
 import ListingButton from "../ui/button";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: session, status } = useSession();
-  console.log("🚀 ~ Header ~ session:", session)
+  const { data: session } = useSession();
+  console.log("🚀 ~ Header ~ session:", session);
 
   return (
     <div className="">
@@ -44,9 +44,19 @@ const Header = () => {
             </nav>
 
             <div className="flex items-center gap-4">
-              <Link href={"/create"}>
-                <ListingButton label="İlan Ver" />
-              </Link>
+              {session?.user ? (
+                <>
+                  {" "}
+                  <Link href={"/create"}>
+                    <ListingButton variant="success" label="İlan Ver" />
+                  </Link>
+                  <ListingButton variant="red" label="Çıkış Yap" onClick={() => signOut()} />
+                </>
+              ) : (
+                <Link href={"/login"}>
+                  <ListingButton variant="success" label="Giriş Yap" />
+                </Link>
+              )}
               <button
                 className="md:hidden p-2"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

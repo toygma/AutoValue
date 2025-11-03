@@ -1,29 +1,54 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
+
+function middlewareHandler(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.startsWith("/api") ||
+    pathname === "/favicon.ico"
+  ) {
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ req, token }) => {
-        const isAuthenticated = !!token;
-        const isAdmin = token?.role === "admin";
-        const isAccessingAdminPath = req.nextUrl.pathname.startsWith("/admin");
-
-        if (isAccessingAdminPath && !isAdmin) {
-          return false;
-        }
-        return isAuthenticated;
-      },
-    },
-    pages: {
-      signIn: "/", 
-    },
   }
-);
+
+  const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
+
+  const token = (req as any).nextauth?.token;
+  const isAuthenticated = !!token;
+
+  if (isAuthenticated && isAuthPage) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  const isAdminPage = pathname.startsWith("/admin");
+  const isAdmin = token?.role === "admin";
+
+  if (isAdminPage && !isAdmin) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
+}
+
+export default withAuth(middlewareHandler, {
+  callbacks: {
+    authorized: ({ token }) => {
+      return !!token;
+    },
+  },
+  pages: {
+    signIn: "/login",
+  },
+});
 
 export const config = {
-  matcher: ["/admin/:path*"], 
+  matcher: ["/((?!_next|static|api|favicon.ico).*)"],
 };
