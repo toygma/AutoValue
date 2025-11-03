@@ -1,11 +1,5 @@
-import CreateListingPage from "./_components/Create";
+import { CarListingForm } from "./_components/carInformation";
 
-const CreateCar = () => {
-  return (
-    <div>
-      <CreateListingPage />
-    </div>
-  );
-};
-
-export default CreateCar;
+export default function CreatePage() {
+  return <CarListingForm />;
+}

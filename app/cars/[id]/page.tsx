@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { MapPin, Gauge, Fuel, Cog, Calendar, ArrowLeft, Phone, Mail, User } from "lucide-react";
 import Link from "next/link";
-import Reviews from "./_components/Reviews";
+import Reviews from "./_components/reviews";
 
 interface CarDetailsProps {
   params: { id: string };
