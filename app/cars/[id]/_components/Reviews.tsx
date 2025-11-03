@@ -9,7 +9,7 @@ import {
   Calendar,
 } from "lucide-react";
 import Image from "next/image";
-import { averageRating, formatDate } from "@/lib/helper";
+import { averageRating, formatDate } from "@/utils/helper";
 
 // ---- Star Rating Component ----
 interface StarRatingProps {
