@@ -8,7 +8,7 @@ import MobileMenu from "./mobileMenu";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
