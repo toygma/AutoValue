@@ -4,6 +4,7 @@ import { Car, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { menuData } from "./_components/menu-data";
 import MobileMenu from "./mobileMenu";
+import ListingButton from "../ui/button";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,9 +40,9 @@ const Header = () => {
             </nav>
 
             <div className="flex items-center gap-4">
-              <button className="hidden md:block px-6 py-2.5 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-lg hover:scale-105 transition font-medium">
-                İlan Ver
-              </button>
+              <Link href={"/create"}>
+                <ListingButton label="İlan Ver" />
+              </Link>
               <button
                 className="md:hidden p-2"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
