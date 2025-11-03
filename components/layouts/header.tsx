@@ -5,9 +5,13 @@ import Link from "next/link";
 import { menuData } from "./_components/menu-data";
 import MobileMenu from "./mobileMenu";
 import ListingButton from "../ui/button";
+import { useSession } from "next-auth/react";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
+  console.log("🚀 ~ Header ~ session:", session)
+
   return (
     <div className="">
       {/* Header */}

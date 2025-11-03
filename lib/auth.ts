@@ -1,70 +1,86 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import type { NextAuthOptions } from "next-auth";
-import { PrismaClient } from "./generated/prisma/client";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import bcrypt from "bcrypt";
 import { AuthSchema } from "@/schemas/auth.schema";
-import bcrypt from "bcrypt"; 
-
-const prisma = new PrismaClient();
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import prisma from "./prisma";
+import { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
+        email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        if (!credentials) return null;
+
         const parsed = AuthSchema.safeParse(credentials);
+
         if (!parsed.success) {
-          throw new Error("Invalid input");
+          return null;
         }
 
         const { email, password } = parsed.data;
 
-      const user = await prisma.user.findUnique({
-        where: { email },
-      });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email },
+          });
 
-      if (!user) {
-        throw new Error("Invalid email or password");
-      }
+          if (!user || !user.password) {
+            return null;
+          }
 
-      if (!user.password) {
-        throw new Error("Invalid email or password");
-      }
+          const isValid = await bcrypt.compare(password, user.password);
 
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) throw new Error("Invalid email or password");
+          if (!isValid) {
+            return null;
+          }
 
-      return user;
+          return {
+            id: user.id,
+            email: user.email,
+          };
+        } catch (error) {
+          console.error("Auth error:", error);
+          return null;
+        }
       },
     }),
   ],
 
-  adapter: PrismaAdapter(prisma),
-  secret: process.env.AUTH_SECRET,
-
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, 
+    maxAge: 30 * 24 * 60 * 60,
   },
 
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        (token as any).id = (user as any).id;
+        (token as any).email = (user as any).email;
       }
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        session.user.id = (token as any).id;
+        session.user.email = (token as any).email;
       }
       return session;
     },
   },
 
+  pages: {
+    signIn: "/auth/signin",
+  },
+
+  secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 };
+
+export default authOptions;
