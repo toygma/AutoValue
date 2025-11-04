@@ -39,3 +39,8 @@ export interface StepProps {
   isFirstStep: boolean;
   isLastStep: boolean;
 }
+export interface FilterData {
+  brands: string[];
+  modelsByBrand: Record<string, string[]>;
+  years: number[];
+}

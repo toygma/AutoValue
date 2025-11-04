@@ -8,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- ENUMS ---
 enum Fuel {
   Gaz
   Dizel
@@ -20,8 +19,6 @@ enum Transmission {
   Manuel
   Otomatik
 }
-
-// --- USER & AUTH MODELS ---
 
 model Account {
   id                 String    @id @default(cuid())

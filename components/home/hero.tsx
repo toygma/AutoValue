@@ -1,27 +1,45 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { stats } from "./_components/data";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/lib/axios";
+import toast from "react-hot-toast";
+import { FilterData } from "@/types";
+
+
 
 const Hero = () => {
   // filter state
   const [brand, setBrand] = useState<string>("");
   const [model, setModel] = useState<string>("");
   const [year, setYear] = useState<string>("");
+  const [filters, setFilters] = useState<FilterData>({
+    brands: [],
+    modelsByBrand: {},
+    years: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
   const router = useRouter();
 
-  // results state
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const res = await axiosInstance.get("/api/filters");
+        setFilters(res.data);
+      } catch (error) {
+        toast.error("Filtreler yüklenemedi");
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const modelsForBrand: Record<string, string[]> = {
-    BMW: ["3 Serisi", "5 Serisi", "X5"],
-    Mercedes: ["C-Serisi", "E-Serisi", "GLC"],
-    Audi: ["A3", "A4", "Q5"],
-    Volkswagen: ["Passat", "Golf", "Tiguan"],
-    Toyota: ["Corolla", "Camry", "RAV4"],
-  };
+    fetchFilters();
+  }, []);
 
-  const onSearch = () => {
+  const onSearch = async () => {
     const params = new URLSearchParams();
     if (brand) params.set("brand", brand);
     if (model) params.set("model", model);
@@ -53,25 +71,26 @@ const Hero = () => {
                 setBrand(e.target.value);
                 setModel("");
               }}
-              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              disabled={isLoading}
+              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:opacity-50"
             >
               <option value="">Marka Seçin</option>
-              <option value="BMW">BMW</option>
-              <option value="Mercedes">Mercedes</option>
-              <option value="Audi">Audi</option>
-              <option value="Volkswagen">Volkswagen</option>
-              <option value="Toyota">Toyota</option>
+              {filters.brands.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
             </select>
 
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              disabled={!brand}
+              disabled={!brand || isLoading}
+              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:opacity-50"
             >
               <option value="">Model Seçin</option>
               {brand &&
-                (modelsForBrand[brand] || []).map((m) => (
+                (filters.modelsByBrand[brand] || []).map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>
@@ -81,14 +100,15 @@ const Hero = () => {
             <select
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              disabled={isLoading}
+              className="px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:opacity-50"
             >
               <option value="">Yıl</option>
-              <option value="2025">2025</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-              <option value="2021">2021</option>
+              {filters.years.map((y) => (
+                <option key={y} value={y.toString()}>
+                  {y}
+                </option>
+              ))}
             </select>
 
             <button
