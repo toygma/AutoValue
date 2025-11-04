@@ -3,13 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
 
-export async function DELETE(req: NextRequest, { params }: RouteParams) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -20,7 +15,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { id } = await params;
+   const  id  = (await params).id; 
 
     if (!id) {
       return NextResponse.json(
@@ -65,9 +60,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 }
 
 // GET - Get a specific review (optional)
-export async function GET(req: NextRequest, { params }: RouteParams) {
+export async function GET(request:NextRequest,{ params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params;
+   const  id  = (await params).id; 
 
     if (!id) {
       return NextResponse.json(
@@ -102,7 +97,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PUT(req: NextRequest, { params }: RouteParams) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -113,7 +108,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { id } = await params;
+   const  id  = (await params).id; 
     const body = await req.json();
     const { comment, rating } = body;
 

@@ -36,7 +36,6 @@ const DetailAddPage = ({ id }: { id: string }) => {
   useEffect(() => {
     fetchCar();
   }, [id]);
-  console.log("🚀 ~ DetailAddPage ~ car:", car);
 
   if (!car) return <div>Yükleniyor...</div>;
 
