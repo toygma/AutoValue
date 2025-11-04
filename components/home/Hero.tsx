@@ -4,7 +4,6 @@ import { Search } from "lucide-react";
 import { stats } from "./_components/data";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axios";
-import toast from "react-hot-toast";
 import { FilterData } from "@/types";
 
 
@@ -29,7 +28,6 @@ const Hero = () => {
         const res = await axiosInstance.get("/api/filters");
         setFilters(res.data);
       } catch (error) {
-        toast.error("Filtreler yüklenemedi");
         console.error(error);
       } finally {
         setIsLoading(false);
