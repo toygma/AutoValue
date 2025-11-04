@@ -22,10 +22,28 @@ export async function GET(req: NextRequest) {
 
     const cars = await prisma.car.findMany({
       where: filters,
-      include: { user: true },
+      include: {
+        user: true,
+        reviews: {
+          include: { user: true },
+        },
+      },
     });
 
-    return NextResponse.json(cars, { status: 200 });
+    const carWithRating = cars.map((car) => {
+      const totalReviews = car.reviews.length;
+      const averageRating =
+        totalReviews > 0
+          ? car.reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+          : 0;
+
+      return {
+        ...car,
+        averageRating,
+      };
+    });
+
+    return NextResponse.json(carWithRating, { status: 200 });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -41,14 +59,13 @@ export async function POST(req: NextRequest) {
     }
 
     const formData = await req.formData();
-    
+
     if (!formData) {
       return NextResponse.json({ error: "Missing form data" }, { status: 400 });
     }
-    
+
     const body: { [key: string | number]: any } = {};
     const imageFiles: File[] = [];
-    console.log("🚀 ~ POST ~ formData:", body)
 
     for (const [key, value] of formData.entries()) {
       if (key === "images") {
