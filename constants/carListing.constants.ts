@@ -62,3 +62,8 @@ export const generateYears = (): number[] => {
   const currentYear = new Date().getFullYear();
   return Array.from({ length: 30 }, (_, i) => currentYear - i);
 };
+
+
+export const RATING_LABELS = ["Kötü", "Vasat", "İyi", "Çok İyi", "Mükemmel"];
+export const MIN_COMMENT_LENGTH = 10;
+export const MAX_COMMENT_LENGTH = 500;

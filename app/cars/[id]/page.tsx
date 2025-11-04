@@ -11,7 +11,7 @@ export default async function page({
   return (
     <div className="min-h-screen bg-linear-to-b from-slate-50 to-slate-100 py-10">
       <DetailAddPage id={id}/>
-      <Reviews />
+      <Reviews id={id}/>
     </div>
   );
 }

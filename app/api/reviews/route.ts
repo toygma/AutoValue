@@ -1,205 +1,140 @@
-import { Review } from "@/lib/generated/prisma/client";
-import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 
-export async function GET(req: NextRequest, params: { id: string }) {
-  const { id } = await params;
-
-  if (!id) {
-    return NextResponse.json({ error: "Car id is required" }, { status: 400 });
-  }
-
+// GET - Fetch reviews for a specific car
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const carId = searchParams.get("carId");
+
+    if (!carId) {
+      return NextResponse.json(
+        { error: "carId parametresi gereklidir" },
+        { status: 400 }
+      );
+    }
+
     const reviews = await prisma.review.findMany({
-      where: { carId: id },
-      include: { user: true },
-      orderBy: { createdAt: "desc" },
+      where: { carId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
-    return NextResponse.json(reviews, { status: 200 });
+    return NextResponse.json(reviews);
   } catch (error) {
-    console.error("error:", error);
+    console.error("Yorumlar alınırken hata:", error);
     return NextResponse.json(
-      { error: "Yorumlar yüklenemedi" },
+      { error: "Yorumlar alınırken bir hata oluştu" },
       { status: 500 }
     );
   }
 }
 
+// POST - Create a new review
 export async function POST(req: NextRequest) {
   try {
-    const body: Review = await req.json();
-    const { carId, userId, comment, rating } = body;
+    const session = await getServerSession(authOptions);
 
-    if (!carId || !userId || !comment || !rating) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { error: "carId, userId , comment, rating alanları zorunludur" },
+        { error: "Yorum yapmak için giriş yapmalısınız" },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const { carId, comment, rating } = body;
+
+    // Validation
+    if (!carId || !comment || !rating) {
+      return NextResponse.json(
+        { error: "carId, comment ve rating alanları gereklidir" },
         { status: 400 }
       );
     }
 
+    if (typeof rating !== "number" || rating < 1 || rating > 5) {
+      return NextResponse.json(
+        { error: "rating 1 ile 5 arasında bir sayı olmalıdır" },
+        { status: 400 }
+      );
+    }
+
+    if (comment.trim().length < 10) {
+      return NextResponse.json(
+        { error: "Yorum en az 10 karakter olmalıdır" },
+        { status: 400 }
+      );
+    }
+
+    if (comment.length > 500) {
+      return NextResponse.json(
+        { error: "Yorum en fazla 500 karakter olabilir" },
+        { status: 400 }
+      );
+    }
+
+    // Check if car exists
+    const carExists = await prisma.car.findUnique({
+      where: { id: carId },
+    });
+
+    if (!carExists) {
+      return NextResponse.json(
+        { error: "Belirtilen araç bulunamadı" },
+        { status: 404 }
+      );
+    }
+
+    // Check if user already reviewed this car
     const existingReview = await prisma.review.findFirst({
       where: {
-        userId: userId,
+        carId,
+        userId: session.user.id,
       },
     });
 
     if (existingReview) {
       return NextResponse.json(
-        {
-          error: "Bir tane yorum yapabilirsin.",
-        },
-        { status: 409 }
-      );
-    }
-
-    const newReview = await prisma.review.create({
-      data: {
-        carId,
-        userId,
-        comment,
-        rating,
-      },
-      include: {
-        user: true,
-      },
-    });
-
-    const car = await prisma.car.findUnique({
-      where: { id: carId },
-      include: { reviews: true },
-    });
-
-    if (car) {
-      const totalRating =
-        car.reviews.reduce((sum, r) => sum + r.rating, 0) + rating;
-      const reviewCount = car.reviews.length + 1;
-      const averageRating = totalRating / reviewCount;
-
-      await prisma.car.update({
-        where: { id: carId },
-        data: { totalRating, averageRating },
-      });
-    }
-    return NextResponse.json(newReview, { status: 201 });
-  } catch (error) {
-    console.error("error:", error);
-    return NextResponse.json(
-      { error: "Yorum oluşturulamadı." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = await params;
-  try {
-    const body = await req.json();
-    const { comment, rating } = body;
-
-    if (rating === undefined && !comment) {
-      return NextResponse.json(
-        { error: "comment veya rating alanlarından en az biri gereklidir." },
+        { error: "Bu araç için zaten yorum yaptınız" },
         { status: 400 }
       );
     }
 
-    const existingReview = await prisma.review.findUnique({
-      where: { id },
-    });
-
-    if (!existingReview) {
-      return NextResponse.json({ error: "Yorum bulunamadı." }, { status: 404 });
-    }
-
-    const updatedReview = await prisma.review.update({
-      where: { id },
+    // Create review
+    const review = await prisma.review.create({
       data: {
-        comment: comment ?? existingReview.comment,
-        rating: rating ?? existingReview.rating,
+        carId,
+        userId: session.user.id,
+        comment: comment.trim(),
+        rating,
       },
-      include: { user: true },
-    });
-
-    const car = await prisma.car.findUnique({
-      where: { id: existingReview.carId },
-      include: { reviews: true },
-    });
-
-    if (car) {
-      const totalRating = car.reviews.reduce((sum, r) => sum + r.rating, 0);
-      const averageRating =
-        car.reviews.length > 0 ? totalRating / car.reviews.length : 0;
-
-      await prisma.car.update({
-        where: { id: car.id },
-        data: { totalRating, averageRating },
-      });
-    }
-
-    return NextResponse.json(updatedReview, { status: 200 });
-  } catch (error) {
-    console.error("error:", error);
-    return NextResponse.json(
-      { error: "Yorum güncellenmedi." },
-      { status: 500 }
-    );
-  }
-}
-
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = await params;
-
-  try {
-    const review = await prisma.review.findUnique({
-      where: { id },
-    });
-
-    if (!review) {
-      return NextResponse.json(
-        { error: "Yorum bulunamadı." },
-        { status: 404 }
-      );
-    }
-
-    await prisma.review.delete({
-      where: { id },
-    });
-
-    const car = await prisma.car.findUnique({
-      where: { id: review.carId },
-      include: { reviews: true },
-    });
-
-    if (car) {
-      const totalRating = car.reviews.reduce((sum, r) => sum + r.rating, 0);
-      const averageRating =
-        car.reviews.length > 0 ? totalRating / car.reviews.length : 0;
-
-      await prisma.car.update({
-        where: { id: car.id },
-        data: {
-          totalRating,
-          averageRating,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
         },
-      });
-    }
+      },
+    });
 
+    return NextResponse.json(review, { status: 201 });
+  } catch (error) {
+    console.error("Yorum oluşturulurken hata:", error);
     return NextResponse.json(
-      { message: "Yorum başarıyla silindi." },
-      { status: 200 }
-    );
-  } catch (error: any) {
-    console.error("DELETE /reviews error:", error);
-    return NextResponse.json(
-      { error: error?.message || "Yorum silinemedi." },
+      { error: "Yorum oluşturulurken bir hata oluştu" },
       { status: 500 }
     );
   }
