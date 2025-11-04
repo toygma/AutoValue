@@ -58,6 +58,7 @@ model User {
   cars     Car[]
   accounts Account[]
   sessions Session[]
+  Review   Review[]
 }
 
 model VerificationRequest {
@@ -69,6 +70,19 @@ model VerificationRequest {
   updatedAt  DateTime @updatedAt
 
   @@unique([identifier, token])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Float
+  comment   String?
+  userId    String
+  carId     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  car  Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
 }
 
 // --- CAR MODEL ---
@@ -87,15 +101,19 @@ model Car {
   engineSize   String
   horsePower   Int
 
-  price    Float
-  city     String
-  district String
+  price         Float
+  city          String
+  district      String
+  totalRating   Float  @default(0)
+  averageRating Float  @default(0)
 
   title       String
   description String
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  reviews Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

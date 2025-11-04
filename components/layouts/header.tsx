@@ -10,7 +10,6 @@ import { signOut, useSession } from "next-auth/react";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session } = useSession();
-  console.log("🚀 ~ Header ~ session:", session);
 
   return (
     <div className="">

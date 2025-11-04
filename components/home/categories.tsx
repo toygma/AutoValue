@@ -1,24 +1,49 @@
 "use client";
-import { useState } from "react";
-import { categories } from "./_components/data";
+import { useEffect, useState } from "react";
+import axiosInstance from "@/lib/axios";
+
 const Categories = () => {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | number>("all"); 
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const res = await axiosInstance.get("/api/filters");
+        setCategories(res.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchFilters();
+  }, []);
 
   return (
     <section className="container mx-auto px-4 mb-16">
       <div className="flex items-center gap-4 overflow-x-auto pb-2">
-        {categories.map((cat) => (
+        <button
+          onClick={() => setSelectedCategoryId("all")}
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition whitespace-nowrap ${
+            selectedCategoryId === "all"
+              ? "bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+              : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+          }`}
+        >
+          Hepsi
+        </button>
+
+        {categories?.brands?.map((cat, index) => (
           <button
-            key={cat.id}
-            onClick={() => setSelectedCategory(cat.id)}
+            key={index}
+            onClick={() => setSelectedCategoryId(index)}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition whitespace-nowrap ${
-              selectedCategory === cat.id
+              selectedCategoryId === index
                 ? "bg-linear-to-r from-blue-600 to-blue-700 text-white shadow-lg"
                 : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
             }`}
           >
-            <cat.icon className="w-5 h-5" />
-            {cat.name}
+            {cat.toUpperCase()}
           </button>
         ))}
       </div>
