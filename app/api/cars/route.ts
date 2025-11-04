@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       include: {
         user: true,
         reviews: {
-          include: { user: true },
+          include: { user: true ,},
         },
       },
     });

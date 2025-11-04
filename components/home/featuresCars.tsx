@@ -9,8 +9,19 @@ import { formatPrice } from "@/utils/helper";
 import Skeleton from "../ui/skeleton";
 import Link from "next/link";
 
+interface CarWithReviews extends Car {
+  reviews: {
+    id: string;
+    rating: number;
+    comment: string;
+    userId: string;
+    carId: string;
+  }[];
+  averageRating: number; 
+}
+
 const FeaturesCars = () => {
-  const [cars, setCars] = useState<Car[]>([]);
+  const [cars, setCars] = useState<CarWithReviews[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   const fetchCars = async () => {
@@ -22,13 +33,11 @@ const FeaturesCars = () => {
       if (res.status !== 200) throw new Error(res.data?.error || "Hata oluştu");
       setCars(res.data);
     } catch (err: unknown) {
-     console.log(err)
+      console.log(err);
     } finally {
       setLoading(false);
     }
   };
-
-  console.log("🚀 ~ FeaturesCars ~ cars:", cars);
 
   useEffect(() => {
     fetchCars();

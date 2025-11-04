@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axiosInstance from "@/lib/axios";
 
 const Categories = () => {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | number>("all"); 
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const Categories = () => {
           Hepsi
         </button>
 
-        {categories?.brands?.map((cat, index) => (
+        {categories?.brands?.map((cat:any, index:number) => (
           <button
             key={index}
             onClick={() => setSelectedCategoryId(index)}
