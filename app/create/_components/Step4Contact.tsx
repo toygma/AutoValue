@@ -5,6 +5,7 @@ import { useFormContext } from "react-hook-form";
 import { Check, Phone, Mail, User } from "lucide-react";
 import { CarListingInput } from "@/schemas/car.schema";
 import { StepProps } from "@/types";
+import { useSession } from "next-auth/react";
 
 interface Step4ContactProps extends StepProps {
   onSubmit: () => void;
@@ -22,7 +23,7 @@ export const Step4Contact: React.FC<Step4ContactProps> = ({
     formState: { errors },
     trigger,
   } = useFormContext<CarListingInput>();
-
+  const { data: session } = useSession();
   const formData = watch();
 
   const handleSubmit = async () => {
@@ -91,7 +92,8 @@ export const Step4Contact: React.FC<Step4ContactProps> = ({
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="email"
-              {...register("email")}
+              readOnly
+              value={session?.user?.email || ""}
               placeholder="ornek@email.com"
               className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             />
@@ -102,7 +104,7 @@ export const Step4Contact: React.FC<Step4ContactProps> = ({
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+      <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
         <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
           <Check className="w-5 h-5 text-blue-600" />
           İlan Özeti
@@ -140,9 +142,7 @@ export const Step4Contact: React.FC<Step4ContactProps> = ({
         <Check className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
         <div className="text-sm text-green-800">
           <p className="font-medium mb-1">Bilgileriniz Güvende</p>
-          <p>
-            İletişim bilgileriniz sadece ilgili kişilerle paylaşılacaktır.
-          </p>
+          <p>İletişim bilgileriniz sadece ilgili kişilerle paylaşılacaktır.</p>
         </div>
       </div>
 
@@ -162,7 +162,7 @@ export const Step4Contact: React.FC<Step4ContactProps> = ({
           className={`px-8 py-3 text-white rounded-lg transition font-medium flex items-center gap-2 ${
             isLoading
               ? "cursor-not-allowed bg-gray-400"
-              : "bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
+              : "bg-linear-to-r from-green-600 to-green-700 hover:shadow-lg hover:scale-105"
           }`}
         >
           <Check className="w-5 h-5" />

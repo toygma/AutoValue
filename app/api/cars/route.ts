@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { upload_file } from "@/lib/cloudinary";
+import { delete_file, upload_file } from "@/lib/cloudinary";
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       include: {
         user: true,
         reviews: {
-          include: { user: true ,},
+          include: { user: true },
         },
       },
     });
@@ -51,70 +51,106 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const uploadedImagePaths: { public_id: string; url: string }[] = [];
+
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Kullanıcı bulunamadı!" },
+        { status: 401 }
+      );
     }
 
     const formData = await req.formData();
 
-    if (!formData) {
-      return NextResponse.json({ error: "Missing form data" }, { status: 400 });
+    const brand = formData.get("brand") as string;
+    const model = formData.get("model") as string;
+    const year = formData.get("year") as string;
+    const fuel = formData.get("fuel") as string;
+    const transmission = formData.get("transmission") as string;
+    const km = formData.get("km") as string;
+    const price = formData.get("price") as string;
+    const city = formData.get("city") as string;
+    const district = formData.get("district") as string;
+    const title = formData.get("title") as string;
+    const color = formData.get("color") as string | null;
+    const engineSize = formData.get("engineSize") as string | null;
+    const horsePower = formData.get("horsePower") as string | null;
+    const description = formData.get("description") as string | null;
+    const name = formData.get("name") as string;
+    const phone = formData.get("phone") as string;
+    const email = formData.get("email") as string | null;
+
+    if (
+      !brand ||
+      !model ||
+      !year ||
+      !fuel ||
+      !transmission ||
+      !km ||
+      !price ||
+      !city ||
+      !district ||
+      !title ||
+      !name ||
+      !phone
+    ) {
+      return NextResponse.json(
+        { message: "Zorunlu alanlar eksik" },
+        { status: 400 }
+      );
     }
 
-    const body: { [key: string | number]: any } = {};
-    const imageFiles: File[] = [];
+    const imageFiles = formData.getAll("images") as File[];
 
-    for (const [key, value] of formData.entries()) {
-      if (key === "images") {
-        if (value instanceof File) {
-          imageFiles.push(value);
+    // Resimleri yükle
+    for (const imageFile of imageFiles) {
+      if (imageFile.size === 0) continue;
+
+      try {
+        const upload = await upload_file(imageFile, "autoValue/cars");
+        uploadedImagePaths.push(upload);
+      } catch (uploadError) {
+        for (const img of uploadedImagePaths) {
+          await delete_file(img.public_id);
         }
-      } else {
-        body[key] = value as string;
+        throw new Error("Resim yükleme hatası");
+      }
+    }
+    const newCar = await prisma.car.create({
+      data: {
+        brand,
+        model,
+        year: parseInt(year),
+        fuel: fuel as "Gaz" | "Dizel" | "Elektrik" | "Hybrid",
+        transmission: transmission as "Otomatik" | "Manuel",
+        km: parseInt(km),
+        price: parseFloat(price),
+        city,
+        district,
+        title,
+        description: description || "",
+        color: color || "",
+        engineSize: engineSize || "",
+        horsePower: horsePower ? parseInt(horsePower) : 0,
+        images: uploadedImagePaths.map((img) => img.url),
+        userId: session.user.id,
+      },
+    });
+
+    return NextResponse.json(newCar, { status: 200 });
+  } catch (error: any) {
+    if (uploadedImagePaths.length > 0) {
+      for (const img of uploadedImagePaths) {
+        await delete_file(img.public_id);
       }
     }
 
-    const uploadPromises = imageFiles.map((image: any) =>
-      upload_file(image, "autoValue/cars")
+    return NextResponse.json(
+      { error: error.message || "Bir hata oluştu" },
+      { status: 500 }
     );
-    const uploadedResults = await Promise.all(uploadPromises);
-
-    const imageUrls: string[] = uploadedResults.map((result) => result.url);
-
-    const dataToCreate = {
-      brand: body.brand,
-      model: body.model,
-      fuel: body.fuel,
-      transmission: body.transmission,
-      color: body.color,
-      engineSize: body.engineSize,
-      title: body.title,
-      description: body.description,
-      city: body.city,
-      district: body.district,
-
-      images: imageUrls,
-
-      km: parseInt(body.km as string, 10),
-      price: parseFloat(body.price as string),
-      horsePower: parseInt(body.horsePower as string, 10),
-      year: parseInt(body.year as string, 10),
-
-      userId: session.user.id,
-    };
-
-    const car = await prisma.car.create({
-      data: dataToCreate,
-      include: { user: true },
-    });
-
-    return NextResponse.json(car, { status: 201 });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("İlan oluşturma hatası:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
