@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
           imageFiles.push(value);
         }
       } else {
-        // Metin alanlarını string olarak kaydet
         body[key] = value as string;
       }
     }
