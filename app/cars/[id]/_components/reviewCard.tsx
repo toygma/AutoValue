@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { User, Calendar, Trash2, Edit2, X, Save } from "lucide-react";
 import { Review } from "@/lib/generated/prisma/client";
-import StarRating from "./starRating";
+import StarRating from "./StarRating";
 import { formatDate } from "@/utils/helper";
 
 interface ReviewWithUser extends Review {

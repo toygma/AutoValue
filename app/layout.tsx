@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/layouts/header";
-import Footer from "@/components/layouts/footer";
+import Header from "@/components/layouts/Header";
+import Footer from "@/components/layouts/Footer";
 import ClientProvider from "./provider";
 import { Toaster } from "react-hot-toast";
 

@@ -1,5 +1,5 @@
-import DetailAddPage from "./_components/detailAddPage";
-import Reviews from "./_components/reviews";
+import DetailAddPage from "./_components/DetailAddPage";
+import Reviews from "./_components/Reviews";
 
 export default async function page({
   params,

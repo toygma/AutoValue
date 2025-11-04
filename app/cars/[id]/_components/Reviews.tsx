@@ -7,9 +7,9 @@ import axiosInstance from "@/lib/axios";
 import { useSession } from "next-auth/react";
 import { averageRating } from "@/utils/helper";
 
-import ReviewCard from "./reviewCard";
-import StarRating from "./starRating";
-import RatingDistribution from "./ratingDistribution";
+import ReviewCard from "./ReviewCard";
+import StarRating from "./StarRating";
+import RatingDistribution from "./RatingDistribution";
 import {
   RATING_LABELS,
   MIN_COMMENT_LENGTH,

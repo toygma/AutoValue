@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Car, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { menuData } from "./_components/menu-data";
-import MobileMenu from "./mobileMenu";
+import MobileMenu from "./MobileMenu";
 import ListingButton from "../ui/button";
 import { signOut, useSession } from "next-auth/react";
 

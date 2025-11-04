@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import CarsPage from "./_components/carsPage";
+import CarsPage from "./_components/CarsPage";
 
 const Cars = () => {
   return (

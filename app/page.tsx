@@ -1,7 +1,7 @@
-import Categories from "@/components/home/categories"
-import Features from "@/components/home/features"
-import FeaturesCars from "@/components/home/featuresCars"
-import Hero from "@/components/home/hero"
+import Categories from "@/components/home/Categories"
+import Features from "@/components/home/Features"
+import FeaturesCars from "@/components/home/FeaturesCars"
+import Hero from "@/components/home/Hero"
 
 const Home = () => {
   return (

@@ -1,4 +1,4 @@
-import { CarListingForm } from "./_components/carInformation";
+import { CarListingForm } from "./_components/CarListingForm";
 
 export default function CreatePage() {
   return <CarListingForm />;

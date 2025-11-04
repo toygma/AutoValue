@@ -5,10 +5,10 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { carListingSchema, CarListingInput } from "@/schemas/car.schema";
-import { Step1BasicInfo } from "./step1BasicInfo";
-import { Step2Images } from "./step2Images";
-import { Step3PriceLocation } from "./step3PriceLocation";
-import { Step4Contact } from "./step4Contact";
+import { Step1BasicInfo } from "./Step1BasicInfo";
+import { Step2Images } from "./Step2Images";
+import { Step3PriceLocation } from "./Step3PriceLocation";
+import { Step4Contact } from "./Step4Contact";
 
 const STEPS = [
   { id: 1, title: "Araç Bilgileri" },
