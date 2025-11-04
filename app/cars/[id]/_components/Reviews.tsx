@@ -11,7 +11,6 @@ import {
 import Image from "next/image";
 import { averageRating, formatDate } from "@/utils/helper";
 
-// ---- Star Rating Component ----
 interface StarRatingProps {
   rating: number;
   onChange?: (rating: number) => void;
