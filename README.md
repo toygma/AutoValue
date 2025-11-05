@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚗 AutoValue
 
-## Getting Started
+AutoValue is a modern car listing platform where users can create, edit, and explore car listings. Users can filter cars by make, model, and year, leave reviews and ratings, and contact sellers directly. Built with Next.js 16, Prisma, NeonDB, Cloudinary, Axios, and NextAuth.
+---
 
-First, run the development server:
+## 🚀 Features
+
+### User Features
+
+- ✅ **User registration and login (secure via NextAuth)**
+- ✅ **Create new car listings**
+- ✅ **Edit or delete existing listings**
+- ✅ **Filter listings by make, model, and year**
+- ✅ **Search listings by keywords**
+- ✅ **View listing details and contact sellers**
+- ✅ **Leave reviews and ratings on cars**
+- ✅ **Manage listing images with Cloudinary integration**
+---
+
+## 🛠️ Technical Highlights
+
+- ✅ **Next.js 16 for modern React-based frontend**
+- ✅ **Prisma ORM with NeonDB for database management**
+- ✅ **Cloudinary for image upload and management**
+- ✅ **Axios for API calls**
+- ✅ **NextAuth for secure authentication**
+- ✅ **Dynamic filtering and search functionality**
+- ✅ **CRUD operations for listings**
+- ✅ **Review and rating system**
+- ✅ **Responsive and user-friendly UI**
+
+---
+
+## .ENV
+
+```bash
+DATABASE_URL=""
+NEXTAUTH_URL=""
+NEXTAUTH_SECRET=""
+CLOUDINARY_CLOUD_NAME=""
+CLOUDINARY_API_KEY=""
+CLOUDINARY_API_SECRET=""
+```
+
+## 🧰 Tech Stack
+
+| Layer                 | Technology                      |
+| ----------            | ------------------------------- |
+| Frontend              | Next.js 16, Tailwind CSS        |
+| Backend               | Next.js API Routes, Prisma      |
+| Database              | NeonDB + Prisma                 |
+| Auth                  | NextAuth                        |
+| Forms                 | React Hook Form                 |
+| HTTP Requests         | Gemini API                      |
+| Alerts                | React Hot Toast                 |
+| Images                | Cloudinary                      |
+
+---
+
+## 🧑‍💻 Getting Started
+
+### 🔧 Prerequisites
+
+- Node.js `v22+`
+
+### 📦 Installation
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd AutoValue
+
+# 2. Install dependencies
+npm install
+```
+
+# 2. Install dependencies
+
+```bash
+pnpm install && npm install
+```
+
+# 3. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ✨ UI & UX
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Clean, modern, and user-friendly interface
+- Fully responsive for desktop, tablet, and mobile
+- Easy forms for creating and editing listings
+- Quick filtering and search functionality
+- Intuitive review and rating system
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+### 🔐 Security & Performance
 
-To learn more about Next.js, take a look at the following resources:
+- Secure authentication with NextAuth
+- Cloudinary for optimized and secure image management
+- Fast and reliable database operations with Prisma
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
