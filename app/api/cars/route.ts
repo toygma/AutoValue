@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
         engineSize: engineSize || "",
         horsePower: horsePower ? parseInt(horsePower) : 0,
         images: uploadedImagePaths.map((img) => img.url),
-        userId: session.user.id,
+        userId: session?.user?.id,
       },
     });
 

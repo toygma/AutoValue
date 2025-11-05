@@ -17,10 +17,14 @@ interface CarWithReviews extends Car {
     userId: string;
     carId: string;
   }[];
-  averageRating: number; 
+  averageRating: number;
 }
 
-const FeaturesCars = () => {
+interface Categories {
+  brands: string[];
+}
+
+const FeaturesCars = ({ categories }: { categories: Categories }) => {
   const [cars, setCars] = useState<CarWithReviews[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -31,9 +35,20 @@ const FeaturesCars = () => {
       const res = await axiosInstance.get(`/api/cars`);
 
       if (res.status !== 200) throw new Error(res.data?.error || "Hata oluştu");
-      setCars(res.data);
+
+      const data = res.data;
+
+      const filter = categories.brands.length > 0
+        ? (data as CarWithReviews[]).filter((item) =>
+            categories.brands.some(
+              (brand) => brand.toLowerCase() === item.brand.toLowerCase()
+            )
+          )
+        : data;
+      
+      setCars(filter);
     } catch (err: unknown) {
-      console.log(err);
+      console.error("Araç yükleme hatası:", err);
     } finally {
       setLoading(false);
     }
@@ -41,7 +56,8 @@ const FeaturesCars = () => {
 
   useEffect(() => {
     fetchCars();
-  }, []);
+  }, [categories]); 
+
   return (
     <section className="container mx-auto px-4 pb-16">
       <div className="flex items-center justify-between mb-8">
@@ -57,7 +73,7 @@ const FeaturesCars = () => {
             <Skeleton key={i} />
           ))}
         </div>
-      ) : (
+      ) : cars.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {cars.map((car) => (
             <div
@@ -75,7 +91,7 @@ const FeaturesCars = () => {
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full flex items-center gap-1">
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   <span className="font-bold text-sm">
-                    {car?.averageRating}
+                    {car?.averageRating || "0.0"}
                   </span>
                 </div>
               </div>
@@ -90,7 +106,7 @@ const FeaturesCars = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-blue-600">
-                      {formatPrice(car.price)} ₺
+                      {formatPrice(car.price)}
                     </div>
                   </div>
                 </div>
@@ -113,7 +129,7 @@ const FeaturesCars = () => {
                 <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                   <div className="flex items-center gap-1 text-sm text-slate-600">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    {car?.reviews?.length} değerlendirme
+                    {car?.reviews?.length || 0} değerlendirme
                   </div>
                   <Link
                     href={`/cars/${car.id}`}
@@ -125,6 +141,10 @@ const FeaturesCars = () => {
               </div>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-slate-600 text-lg">Bu kategoride araç bulunamadı.</p>
         </div>
       )}
     </section>

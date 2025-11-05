@@ -1,10 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/lib/axios";
+import FeaturesCars from "./FeaturesCars";
+
+interface Categories {
+  brands: string[];
+}
 
 const Categories = () => {
-  const [categories, setCategories] = useState<any | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | number>("all"); 
+  const [categories, setCategories] = useState<Categories | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | number>("all");
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -18,6 +23,16 @@ const Categories = () => {
 
     fetchFilters();
   }, []);
+
+  const getSelectedBrands = () => {
+    if (!categories?.brands) return { brands: [] };
+    
+    if (selectedCategoryId === "all") {
+      return { brands: categories.brands };
+    }
+    
+    return { brands: [categories.brands[selectedCategoryId as number]] };
+  };
 
   return (
     <section className="container mx-auto px-4 mb-16">
@@ -33,7 +48,7 @@ const Categories = () => {
           Hepsi
         </button>
 
-        {categories?.brands?.map((cat:any, index:number) => (
+        {categories?.brands?.map((cat: string, index: number) => (
           <button
             key={index}
             onClick={() => setSelectedCategoryId(index)}
@@ -47,6 +62,8 @@ const Categories = () => {
           </button>
         ))}
       </div>
+      
+      {categories && <FeaturesCars categories={getSelectedBrands()} />}
     </section>
   );
 };
