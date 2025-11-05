@@ -1,12 +1,13 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import { AuthSchema } from "@/schemas/auth.schema";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "./prisma";
 import { NextAuthOptions } from "next-auth";
+import { AuthSchema } from "@/schemas/auth.schema";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -17,28 +18,29 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
+        // Form verisini doğrula
         const parsed = AuthSchema.safeParse(credentials);
-
-        if (!parsed.success) {
-          return null;
-        }
+        if (!parsed.success) return null;
 
         const { email, password } = parsed.data;
 
         try {
-          const user = await prisma.user.findUnique({
+          let user = await prisma.user.findUnique({
             where: { email },
           });
 
-          if (!user || !user.password) {
-            return null;
+          if (!user) {
+            const hashed = await bcrypt.hash(password, 10);
+            user = await prisma.user.create({
+              data: {
+                email,
+                password: hashed,
+              },
+            });
           }
 
-          const isValid = await bcrypt.compare(password, user.password);
-
-          if (!isValid) {
-            return null;
-          }
+          const isValid = await bcrypt.compare(password, user.password!);
+          if (!isValid) return null;
 
           return {
             id: user.id,
@@ -53,23 +55,23 @@ export const authOptions: NextAuthOptions = {
   ],
 
   session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    strategy: "jwt", 
+    maxAge: 30 * 24 * 60 * 60, // 30 gün
   },
 
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        (token as any).id = (user as any).id;
-        (token as any).email = (user as any).email;
+        token.id = user.id;
+        token.email = user.email;
       }
       return token;
     },
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token as any).id;
-        session.user.email = (token as any).email;
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
       }
       return session;
     },
