@@ -63,6 +63,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Kullanıcı bulunamadı" },
+        { status: 401 }
+      );
+    }
+
     const formData = await req.formData();
 
     const brand = formData.get("brand") as string;
@@ -81,7 +92,7 @@ export async function POST(req: NextRequest) {
     const description = formData.get("description") as string | null;
     const name = formData.get("name") as string;
     const phone = formData.get("phone") as string;
-    const email = formData.get("email") as string | null;
+    // const email = formData.get("email") as string | null;
 
     if (
       !brand ||
@@ -136,7 +147,7 @@ export async function POST(req: NextRequest) {
         engineSize: engineSize || "",
         horsePower: horsePower ? parseInt(horsePower) : 0,
         images: uploadedImagePaths.map((img) => img.url),
-        userId: session?.user?.id,
+        userId: user.id,
       },
     });
 
